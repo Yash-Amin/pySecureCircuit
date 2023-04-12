@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Dict, List, Tuple
 
-
-from pysecurecircuit.circuit.gates import AndGate, Gate, OrGate, XnorGate, XorGate
 from pysecurecircuit.circuit.circuit_input import CircuitInput
 from pysecurecircuit.circuit.circuit_output import CircuitOutput
+from pysecurecircuit.circuit.gates import (AndGate, Gate, OrGate, XnorGate,
+                                           XorGate)
 from pysecurecircuit.secure_types import Wire, Wires, _SecureInt
 
 
@@ -92,43 +92,45 @@ class Circuit:
 
         return wire
 
-    def assign_to_party(self, party_idx: int, name: str, obj: Wire | Wires) -> None:
+    def assign_to_party(self, party_idx: int, name: str, variable: Wire | Wires) -> None:
         """
         Assigns a wire object or wires object to a party.
 
         Args:
             party_idx (int): The index of the party to assign the wire or wires to.
             name (str): The name of the wire or wires.
-            obj (Wire | Wires): The wire or wires to assign to the party.
+            variable (Wire | Wires): The wire or wires to assign to the party.
 
         Raises:
-            Exception: If object is not Wire or Wires
+            Exception: If variable is not Wire or Wires
         """
-        if isinstance(obj, Wires) or isinstance(obj, Wire):
-            obj.set_as_input_wires(party_idx)
+        if isinstance(variable, Wires) or isinstance(variable, Wire):
+            variable.set_as_input_wires(party_idx)
 
             # Create input object and add to self.inputs
-            input_obj = CircuitInput(len(self.inputs[party_idx]), name, party_idx, obj)
+            input_obj = CircuitInput(
+                len(self.inputs[party_idx]), name, party_idx, variable
+            )
             self.inputs[party_idx].append(input_obj)
         else:
             raise Exception
 
-    def set_output(self, name: str, obj: Wire | Wires) -> None:
+    def set_output(self, name: str, variable: Wire | Wires) -> None:
         """
         Set given Wire or Wires object as output variable of the program.
 
         Args:
             name (str): The name of the wire or wires.
-            obj (Wire | Wires): The wire or wires to assign to the party.
+            variable (Wire | Wires): The wire or wires to assign to the party.
 
         Raises:
             Exception: If object is not Wire or Wires
         """
-        if not isinstance(obj, Wires) and not isinstance(obj, Wire):
+        if not isinstance(variable, Wires) and not isinstance(variable, Wire):
             raise Exception
 
-        obj.set_output()
-        self.outputs.append(CircuitOutput(name, obj))
+        variable.set_output()
+        self.outputs.append(CircuitOutput(name, variable))
 
     def _full_adder(self, wire1: Wire, wire2: Wire, carry_in: Wire) -> Tuple[Wire, Wire]:
         """
