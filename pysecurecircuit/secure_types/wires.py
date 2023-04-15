@@ -76,10 +76,6 @@ class Wires:
         for i in range(self.num_wires):
             self.wires[i].set_value(int(bit_str[i]))
 
-    def __add__(self, obj: Wires) -> Wires:
-        if self.num_wires != obj.num_wires:
-            raise Exception("Invalid number of wires")
-
     def __eq__(self, obj: Wires) -> Wire:
         # if self.num_wires != obj.num_wires:
         #     raise Exception("Invalid number of wires")
@@ -94,7 +90,8 @@ class Wires:
             raise Exception("Invalid number of wires")
 
         xnor_gates: List[Wire] = [
-            self.wires[i].__xnor__(obj.wires[i]) for i in range(len(self.wires))
+            self.wires[i] == obj.wires[i]
+            for i in range(len(self.wires))
         ]
 
         output_wire: Wire = xnor_gates[0] & xnor_gates[1]
