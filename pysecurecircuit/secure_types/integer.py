@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 from pysecurecircuit.secure_types import Wire, Wires
 
@@ -18,8 +18,11 @@ class _SecureInt(Wires):
     # TODO: update it to 32
     num_wires = 8
 
-    def __init__(self, circuit: Circuit, wires=None) -> None:
+    def __init__(self, circuit: Circuit, wires=None, carry_out: Wire = None) -> None:
         super().__init__(circuit=circuit, num_wires=self.num_wires, wires=wires)
+
+        # Carry out wire
+        self.carry_out: Wire = carry_out
 
     def get_value(self) -> int:
         """Returns integer value of bits"""
@@ -30,6 +33,9 @@ class _SecureInt(Wires):
                 output += 2 ** (self.bit_length - i - 1)
 
         return output
+
+    def convert_wires_to_int(self, wires: Wires) -> _SecureInt:
+        return _SecureInt(circuit=self.circuit, wires=wires)
 
     def __add__(self, obj: _SecureInt) -> _SecureInt:
         """
@@ -54,7 +60,47 @@ class _SecureInt(Wires):
             carry_wire = carry_out_wire
             output_wires[i] = sum_wire
 
-        return _SecureInt(circuit=self.circuit, wires=output_wires)
+        return _SecureInt(circuit=self.circuit, wires=output_wires, carry_out=carry_wire)
+
+    def __mul__(self, obj: _SecureInt) -> _SecureInt:
+        """
+        Multiplication of two SecureInt objects
+
+        Retuns:
+            _SecureInt: Secure Integer object
+        """
+        if not isinstance(obj, _SecureInt):
+            raise Exception("given object is not SecureInt")
+
+        # TODO: REFACTOR THIS
+        # Create list of and_wires corresponding to each bit of obj
+        and_wires = list(reversed([self & obj.wires[i] for i in range(self.num_wires)]))
+
+        def shilf_right(left_val: Wire, int_obj: _SecureInt) -> Tuple[_SecureInt, Wire]:
+            """
+            Shifts intger to right.
+            Returns tuple of (New Integer Object, Right-most Wire)
+            """
+            new_int_wires = [left_val] + int_obj.wires[:-1]
+
+            return (
+                _SecureInt(circuit=self.circuit, wires=new_int_wires),
+                int_obj.wires[-1],
+            )
+
+        output_wires = []
+
+        sum_int, output_wire = shilf_right(self.circuit.newWire(0), and_wires[0])
+        output_wires.append(output_wire)
+
+        for i in range(1, self.num_wires):
+            new_sum_int = sum_int + and_wires[i]
+            new_int, last_wire = shilf_right(new_sum_int.carry_out, new_sum_int)
+            
+            sum_int = new_int
+            output_wires.insert(0, last_wire)
+
+        return _SecureInt(circuit=self.circuit, wires=output_wires[-self.num_wires :])
 
     def __gt__(self, obj: _SecureInt) -> Wire:
         """
