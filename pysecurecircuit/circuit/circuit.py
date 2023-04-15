@@ -4,8 +4,7 @@ from typing import Dict, List, Tuple
 
 from pysecurecircuit.circuit.circuit_input import CircuitInput
 from pysecurecircuit.circuit.circuit_output import CircuitOutput
-from pysecurecircuit.circuit.gates import (AndGate, Gate, OrGate, XnorGate,
-                                           XorGate)
+from pysecurecircuit.circuit.gates import AndGate, Gate, OrGate, XnorGate, XorGate
 from pysecurecircuit.secure_types import Wire, Wires, _SecureInt
 
 
@@ -131,6 +130,18 @@ class Circuit:
 
         variable.set_output()
         self.outputs.append(CircuitOutput(name, variable))
+
+    def _full_subtractor(
+        self, wire1: Wire, wire2: Wire, carry_in: Wire
+    ) -> Tuple[Wire, Wire]:
+        xor_result = wire1 ^ wire2
+        out = carry_in ^ xor_result
+
+        and_result = wire1.__not__() & wire2
+        carry_and_result = xor_result.__not__() & carry_in
+        borrow = carry_and_result | and_result
+
+        return out, borrow
 
     def _full_adder(self, wire1: Wire, wire2: Wire, carry_in: Wire) -> Tuple[Wire, Wire]:
         """

@@ -62,6 +62,31 @@ class _SecureInt(Wires):
 
         return _SecureInt(circuit=self.circuit, wires=output_wires, carry_out=carry_wire)
 
+    def __sub__(self, obj: _SecureInt) -> _SecureInt:
+        """
+        Uses full subtractor for subtraction of two SecureIntegers.
+
+        Retuns:
+            _SecureInt: Secure Integer object
+        """
+        if not isinstance(obj, _SecureInt):
+            raise Exception("given object is not SecureInt")
+
+        wires1 = self.wires
+        wires2 = obj.wires
+
+        carry_wire = self.circuit.newWire(bit_value=0)
+        output_wires = [None for _ in range(len(wires1))]
+
+        for i in range(len(wires1) - 1, -1, -1):
+            sum_wire, carry_out_wire = self.circuit._full_subtractor(
+                wires1[i], wires2[i], carry_wire
+            )
+            carry_wire = carry_out_wire
+            output_wires[i] = sum_wire
+
+        return _SecureInt(circuit=self.circuit, wires=output_wires, carry_out=carry_wire)
+
     def __mul__(self, obj: _SecureInt) -> _SecureInt:
         """
         Multiplication of two SecureInt objects
@@ -96,11 +121,14 @@ class _SecureInt(Wires):
         for i in range(1, self.num_wires):
             new_sum_int = sum_int + and_wires[i]
             new_int, last_wire = shilf_right(new_sum_int.carry_out, new_sum_int)
-            
+
             sum_int = new_int
             output_wires.insert(0, last_wire)
 
         return _SecureInt(circuit=self.circuit, wires=output_wires[-self.num_wires :])
+
+    def __truediv__(self, obj: _SecureInt) -> _SecureInt:
+        raise NotImplemented
 
     def __gt__(self, obj: _SecureInt) -> Wire:
         """
