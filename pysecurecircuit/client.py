@@ -1,8 +1,9 @@
+import argparse
 from typing import Dict, List
 
 import zmq
 
-from pysecurecircuit import const
+from pysecurecircuit import const, utils
 from pysecurecircuit.circuit import GarbledCircuit, GarbledGate, GarbledKey
 from pysecurecircuit.secure_types import _SecureInt
 
@@ -31,7 +32,7 @@ class Client:
         self.client_id = client_id
         self.host = host
         self.port = port
-
+ 
         # Dictionary containing mapping of wire_id to its bit value
         self.wire_inputs: Dict[int, int] = {}
 
@@ -52,7 +53,7 @@ class Client:
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
         self.socket.connect(f"tcp://{self.host}:{self.port}")
-        print("[+] Connected")
+        print("[!] Client started")
 
         # Fetch garbled circuit and circuit's metadata
         self.fetch_garbled_circuit()
@@ -63,12 +64,10 @@ class Client:
 
         # Calculate and send circuit's output
         circuit_output = self.garbled_circuit.calculate_output()
-        # TODO: send output
-        # TODO: log output
-
-        # Close connection
-        self.send(const.REQ_CLOSE_CONNECTION, {})
+        self.send(const.REQ_OUTPUT, circuit_output)
         self.socket.recv()
+
+        utils.print_output(circuit_output)
 
     def fetch_garbled_circuit(self):
         """
@@ -77,8 +76,9 @@ class Client:
         self.send(const.REQ_FETCH_GARBLED_TABLE, {})
         data = self.socket.recv_json()
 
+        print(f"[!] Received garbled circuit '{data['name']}'")
         # Take input from user
-        self.take_user_input(data["inputs"])
+        self.wire_inputs = utils.take_user_input(data["inputs"])
 
         # Create garbled circuit object
         self.garbled_circuit = GarbledCircuit(
@@ -100,12 +100,10 @@ class Client:
         """
         Evaluates garbled gate
         """
-        print(">> Gate start: ", gate.id)
 
         def get_key(node) -> str:
             if node in self.garbled_circuit.gates:
                 return self.garbled_circuit.gates[node].output_key.decode()
-            print(self.garbled_circuit.constant_keys)
             return self.garbled_circuit.constant_keys[node]
 
         # If gate has no prerequisites, then fetch keys using oblivious transfer
@@ -120,7 +118,6 @@ class Client:
             gate.input_keys.append(GarbledKey(key=key1))
 
         gate.evaluate()
-        print(">> Gate evaluated: ", gate.id)
 
     def fetch_key_ot(self, key: GarbledKey):
         self.send(
@@ -133,14 +130,9 @@ class Client:
         )
 
         data = self.socket.recv_json()
-
         key.key = data["key"]
 
-        print("recieved keu", key.key)
-
     def fetch_gate_keys(self, gate: GarbledGate):
-        print("[+] Requesting keys for ", gate.id)
-
         self.send(const.REQ_FETCH_GARBLED_GATE_INPUT_KEYS, dict(gate_id=gate.id))
         data = self.socket.recv_json()
 
@@ -166,8 +158,8 @@ class Client:
                 self.fetch_key_ot(key)
 
     def _take_int_input(self, input_info) -> None:
-        # value = int(input(f"[+] Enter value for '{input_info['name']}': "))
-        value = const.BOB_INPUT
+        # value = const.BOB_INPUT
+        value = int(input(f"[+] Enter value for '{input_info['name']}': "))
         if value < 0:
             raise NotImplemented
 
@@ -193,9 +185,15 @@ class Client:
 
 
 def main():
-    # TODO: Add argparser
-    c = Client(client_id=1, host="127.0.0.1", port=const.PORT)
-    c.run()
+    parser = argparse.ArgumentParser(description="puSecureCircuit Client")
+
+    parser.add_argument("--host", type=str, help="The host to connect to", required=True)
+    parser.add_argument("--port", type=int, help="The port to connect to", required=True)
+
+    args = parser.parse_args()
+
+    Client(client_id=1, host=args.host, port=args.port).run()
+
 
 
 if __name__ == "__main__":
