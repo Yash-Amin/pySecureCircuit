@@ -64,6 +64,7 @@ class GarbledCircuit:
         """
         Calculates the output of the circuit.
         """
+        output_data: List[Dict] = []
         for output_info in self.outputs:
             output_value = None
 
@@ -80,8 +81,9 @@ class GarbledCircuit:
                 )
             else:
                 raise NotImplemented
+            output_data.append(dict(name=variable_name, kind=kind, value=output_value))
 
-            print(f"[+] {variable_name} = {output_value}")
+        return output_data
 
     def __repr__(self) -> str:
         return f"GarbledCircuit({self.gates=})"

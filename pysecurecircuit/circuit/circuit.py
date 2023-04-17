@@ -13,11 +13,12 @@ class Circuit:
     Represents boolean circuit.
     """
 
-    def __init__(self, num_parties: int) -> None:
+    def __init__(self, name: str, num_parties: int) -> None:
         """
         Initializes a new Circuit object.
 
         Args:
+            name (str): Name of the circuit
             num_parties (int): The number of parties involved in the computation.
 
         Raises:
@@ -29,6 +30,7 @@ class Circuit:
         elif num_parties > 2:
             raise NotImplemented
 
+        self.name = name
         self.num_parties = num_parties
 
         self.gates: List[Gate] = []
@@ -247,34 +249,13 @@ class Circuit:
         inputs = [dict(input_info) for input_info in self.inputs[1]]
 
         return dict(
+            name=self.name,
             garbled_table=garbled_table,
             gate_prerequisites=gate_prerequisites,
             inputs=inputs,
             outputs=list(map(dict, self.outputs)),
             const_keys=self.const_keys,
         )
-
-    # def get_keyx(self, gate_id: int):
-    #     # Find gate with given gate id
-    #     gate = [gate for gate in self.gates if gate.id == gate_id][0]
-
-    #     data = []
-    #     input_wires = gate.input_wires
-
-    #     for input_wire in input_wires:
-    #         if input_wire.party_id < 0:
-    #             raise Exception
-    #         elif input_wire.party_id == 0:
-    #             if input_wire.bit_value is None:
-    #                 raise Exception("Input value is not provided")
-
-    #             data.append(input_wire.keys[input_wire.bit_value])
-    #         else:
-    #             print(input_wire.party_id, input_wire.keys)
-    #             # TODO: Ask bob for his input bit
-    #             data.append(input_wire.keys[1])
-    #     print(f"{data=}")
-    #     return data
 
     def get_gate_prerequisites(self):
         """

@@ -5,6 +5,7 @@ import zmq
 
 from pysecurecircuit import const, utils
 from pysecurecircuit.circuit import GarbledCircuit, GarbledGate, GarbledKey
+from pysecurecircuit.ot import ot_decrypt, ot_request
 from pysecurecircuit.secure_types import _SecureInt
 
 
@@ -32,7 +33,7 @@ class Client:
         self.client_id = client_id
         self.host = host
         self.port = port
- 
+
         # Dictionary containing mapping of wire_id to its bit value
         self.wire_inputs: Dict[int, int] = {}
 
@@ -120,17 +121,26 @@ class Client:
         gate.evaluate()
 
     def fetch_key_ot(self, key: GarbledKey):
+        wire_value = self.wire_inputs[key.wire_id]
+
+        private_key, public_keys = ot_request(wire_value)
+
         self.send(
             const.REQ_OT_KEY_TRANSFER,
             dict(
-                input_bit=self.wire_inputs[key.wire_id],
+                # input_bit=self.wire_inputs[key.wire_id],
+                public_keys=public_keys,
                 wire_id=key.wire_id,
                 party_id=key.party_id,
             ),
         )
 
         data = self.socket.recv_json()
-        key.key = data["key"]
+
+        encrypted_values = data["encrypted_values"]
+
+        key.key = ot_decrypt(wire_value, encrypted_values, private_key)
+        # key.key = data["key"]
 
     def fetch_gate_keys(self, gate: GarbledGate):
         self.send(const.REQ_FETCH_GARBLED_GATE_INPUT_KEYS, dict(gate_id=gate.id))
@@ -193,7 +203,6 @@ def main():
     args = parser.parse_args()
 
     Client(client_id=1, host=args.host, port=args.port).run()
-
 
 
 if __name__ == "__main__":

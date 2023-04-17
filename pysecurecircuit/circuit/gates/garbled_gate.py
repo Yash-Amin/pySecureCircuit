@@ -30,9 +30,8 @@ class GarbledGate:
         Evaluate the gate by decrypting the garbled table using the input keys.
         Set the output key to the result of the decryption.
         """
-        print("evaluating ", self.id)
-
         key0, key1 = [input_key.key.encode() for input_key in self.input_keys]
+
         for row in self.garbled_table:
             try:
                 msg1 = Fernet(key0).decrypt(row)
@@ -40,7 +39,6 @@ class GarbledGate:
 
                 self.output_key = msg
 
-                print("[!]", msg)
                 return
             except:
                 continue
