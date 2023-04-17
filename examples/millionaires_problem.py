@@ -15,7 +15,7 @@ from pysecurecircuit.server import Server
 
 def main():
     # Create circuit with 2 party
-    circuit = Circuit(num_parties=2)
+    circuit = Circuit(name="Millionaires' Problem", num_parties=2)
 
     # Define input variable
     alice_wealth = circuit.newSecureInteger()
