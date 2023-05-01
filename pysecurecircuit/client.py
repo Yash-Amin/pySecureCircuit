@@ -192,18 +192,3 @@ class Client:
                 self.wire_inputs[input_info["wires"][1]] = int(const.BOB_INPUT)
             else:
                 raise NotImplemented
-
-
-def main():
-    parser = argparse.ArgumentParser(description="puSecureCircuit Client")
-
-    parser.add_argument("--host", type=str, help="The host to connect to", required=True)
-    parser.add_argument("--port", type=int, help="The port to connect to", required=True)
-
-    args = parser.parse_args()
-
-    Client(client_id=1, host=args.host, port=args.port).run()
-
-
-if __name__ == "__main__":
-    main()
