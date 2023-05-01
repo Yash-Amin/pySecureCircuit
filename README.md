@@ -1,16 +1,15 @@
 # pySecureCircuit
 
-pySecureCircuit is a Python library that allows secure multiparty computation using Yao's garbled circuit technique. The library provides a way for parties to securely compute a function on their private inputs without revealing them to each other, using a combination of encryption, randomization, and computation over circuits.
+pySecureCircuit is a Python library that allows secure multiparty computation using Yao's garbled circuit technique. The library provides a way for multiple parties to securely compute a function on their private inputs without revealing them to each other, using a combination of encryption, randomization, and computation over circuits.
 
 ## Getting Started
 
-### Requirements
-
-TODO
-
 ### Installation
 
-TODO
+Run the following command to install the library: 
+```sh
+pip install pysecurecircuit
+```
 
 ## Usage
 
@@ -42,7 +41,7 @@ def main():
     circuit.set_output(name="Alice richer than Bob", variable=alice_richer_than_bob)
 
     # Start server
-    Server(circuit, "0.0.0.0", 5000).start()
+    Server(circuit).start()
 
 main()
 ```
@@ -52,7 +51,7 @@ main()
 To start server for the circuit creator run
 
 ```sh
-python3 script.py --host HOST --port PORT
+python3 script.py --host 0.0.0.0 --port PORT
 ```
 
 #### Client
@@ -60,7 +59,7 @@ python3 script.py --host HOST --port PORT
 For circuit evaluator, run the following command
 
 ```sh
-python3 -m pysecurecircuit.client --client-id CLIENT_ID --host HOST --port PORT
+python3 -m pysecurecircuit --client-id CLIENT_ID --host HOST --port PORT
 ```
 
 Where `CLIENT_ID` is the identifier of the client that starts from 1, `HOST` is the IP address or hostname of the server, and `PORT` is the port number to connect to.
