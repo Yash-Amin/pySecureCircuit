@@ -31,6 +31,15 @@ def main():
     bob_wealth = circuit.newSecureInteger()
 
     # Circuit logic
+    # 
+    # Note:
+    # When arithmetic and logical operators are applied to secure datatypes,
+    # additional wires and gates are added to the circuit. Magic methods
+    # automatically update the circuit based on the operation performed between
+    # two secure datatypes, and they return output wires. In the following line
+    # of code, the circuit is updated to compare whether `alice_wealth` is greater
+    # than `bob_wealth`. The magic method returns an output wire, which is stored
+    # in the variable `alice_richer_than_bob`.
     alice_richer_than_bob = alice_wealth > bob_wealth
 
     # Assign input variables to alice and bob
